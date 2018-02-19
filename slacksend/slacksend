@@ -1,0 +1,89 @@
+#!/usr/bin/env python -B
+
+import requests
+import toml
+import click
+import os
+import codecs
+import base64 as b64
+
+
+class ConfigObject:
+
+    def __init__(self, config_file=None, token=None, username=None, channel=None):
+
+        if config_file is None:
+            self.config_file = os.path.expanduser('~') + "/.slacksend/config.toml"
+        elif config_file is None and os.path.exists(os.path.expanduser('~') + "/.slacksend/config.toml") is False:
+            self.config_file = os.getcwd() + "/config.toml"
+        else:
+            self.config_file = config_file
+
+        try:
+            with open(self.config_file) as cnf:
+                conf = toml.loads(cnf.read())
+
+            self.token = conf['slack']['token']
+            self.username = conf['slack']['username']
+            self.channel = conf['slack']['channel']
+
+        except FileNotFoundError:
+
+            self.token = token
+            self.username = username
+            self.channel = channel
+
+
+class SlackSend:
+
+    def __init__(self, token, username, channel, text):
+
+        self.token = token
+        self.username = username
+        self.channel = channel
+        self.text = text
+
+    def send_message(self):
+
+        params = {
+            'username': self.username,
+            'channel': self.channel,
+            'text': self.text
+        }
+
+        slack_url = 'https://hooks.slack.com/services/T0PTA5XML/B7X6XF25A/{}'.format(self.token)
+
+        r = requests.post(slack_url, json=params)
+
+        print(r.text)
+        print(r.status_code)
+
+
+@click.command()
+@click.option('-t', '--token', help='Slack Webhook Token')
+@click.option('-u', '--username', help='Username to Post as on Slack')
+@click.option('-c', '--channel', help='Channel to Post Message to on Slack')
+@click.option('-m', '--message', help='Message to Post')
+@click.option('-r', '--rot13', is_flag=True, help='Send message ROT13 Encoded')
+@click.option('-b', '--base64', is_flag=True, help='Send message Base64 Encoded')
+def post_message(token, username, channel, message, rot13, base64):
+
+    cfg = ConfigObject()
+
+    if rot13:
+        msg_text = '`rot13("{}")`'.format(codecs.encode(message, 'rot13'))
+    elif base64:
+        msg_text = '`base64("{}")`'.format(b64.b64encode(bytes(message, 'utf-8')).decode('utf-8'))
+    else:
+        msg_text = message
+
+    if os.path.exists(cfg.config_file):
+        msg = SlackSend(cfg.token, cfg.username, cfg.channel, msg_text)
+    else:
+        msg = SlackSend(token, username, channel, msg_text)
+
+    msg.send_message()
+
+
+if __name__ == '__main__':
+    post_message()

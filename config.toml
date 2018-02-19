@@ -1,0 +1,4 @@
+[slack]
+    token = 'MYHEdexVzpwYhZFGUjsqB7IC'
+    username = 'Anonymouse'
+    channel = 'slack-webhook-test'
