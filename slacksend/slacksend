@@ -59,7 +59,7 @@ class SlackSend:
         print(r.status_code)
 
 
-@click.command()
+@click.command(help='Send Message to Slack via Incoming Webhook')
 @click.option('-t', '--token', help='Slack Webhook Token')
 @click.option('-u', '--username', help='Username to Post as on Slack')
 @click.option('-c', '--channel', help='Channel to Post Message to on Slack')
