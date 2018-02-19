@@ -1,6 +1,16 @@
 # slacksend
 Send arbitrary messages to Slack via incoming webhook
 
+## Usage
+
+### Config File
+Slacksend expects a config file (stored either in `$HOME/.slacksend/config.toml`
+or `$PWD/config.toml`)
+
+An example of this config file can be found in `config.toml.example`
+
+### Command Line Reference
+
 ```
 Usage: slacksend [OPTIONS]
 
