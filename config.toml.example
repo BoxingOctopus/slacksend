@@ -1,0 +1,4 @@
+[slack]
+    token = '<token goes here>'
+    username = 'SuperAwesome'
+    channel = 'my-awesome-channel'

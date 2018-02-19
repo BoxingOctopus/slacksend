@@ -14,7 +14,7 @@ class ConfigObject:
 
         if config_file is None:
             self.config_file = os.path.expanduser('~') + "/.slacksend/config.toml"
-        elif config_file is None and os.path.exists(os.path.expanduser('~') + "/.slacksend/config.toml") is False:
+        elif config_file is None and not os.path.exists(os.path.expanduser('~') + "/.slacksend/config.toml"):
             self.config_file = os.getcwd() + "/config.toml"
         else:
             self.config_file = config_file
