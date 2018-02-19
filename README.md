@@ -26,3 +26,8 @@ Options:
   --help               Show this message and exit.
   ```
 
+## Installation
+
+```
+$ python setup.py install
+```
