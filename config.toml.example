@@ -1,4 +1,6 @@
 [slack]
     token = '<token goes here>'
+    team_id = 'T00000000'
+    bot_id = 'B00000000'
     username = 'SuperAwesome'
     channel = 'my-awesome-channel'

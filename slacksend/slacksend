@@ -6,11 +6,13 @@ import click
 import os
 import codecs
 import base64 as b64
+import requests.exceptions
+import urllib3.exceptions
 
 
 class ConfigObject:
 
-    def __init__(self, config_file=None, token=None, username=None, channel=None):
+    def __init__(self, config_file=None, token=None, team_id=None, bot_id=None, username=None, channel=None):
 
         if config_file is None:
             self.config_file = os.path.expanduser('~') + "/.slacksend/config.toml"
@@ -24,21 +26,27 @@ class ConfigObject:
                 conf = toml.loads(cnf.read())
 
             self.token = conf['slack']['token']
+            self.team_id = conf['slack']['team_id']
+            self.bot_id = conf['slack']['bot_id']
             self.username = conf['slack']['username']
             self.channel = conf['slack']['channel']
 
         except FileNotFoundError:
 
             self.token = token
+            self.team_id = team_id
+            self.bot_id = bot_id
             self.username = username
             self.channel = channel
 
 
 class SlackSend:
 
-    def __init__(self, token, username, channel, text):
+    def __init__(self, token, team_id, bot_id, username, channel, text):
 
         self.token = token
+        self.team_id = team_id
+        self.bot_id = bot_id
         self.username = username
         self.channel = channel
         self.text = text
@@ -51,22 +59,28 @@ class SlackSend:
             'text': self.text
         }
 
-        slack_url = 'https://hooks.slack.com/services/T0PTA5XML/B7X6XF25A/{}'.format(self.token)
+        slack_url = 'https://hooks.slack.com/services/{0}/{1}/{2}'.format(self.team_id, self.bot_id, self.token)
 
-        r = requests.post(slack_url, json=params)
+        try:
+            r = requests.post(slack_url, json=params)
 
-        print(r.text)
-        print(r.status_code)
+            print('{0} {1}'.format(r.status_code, r.text))
+        except requests.exceptions.ConnectionError:
+            print('Oops! There was an error. The Response from Slack was: {0} {1}').format(r.status_code, r.text)
+        except urllib3.exceptions.NewConnectionError or urllib3.exceptions.MaxRetryError:
+            print('Could not connect to Slack')
 
 
 @click.command(help='Send Message to Slack via Incoming Webhook')
 @click.option('-t', '--token', help='Slack Webhook Token')
+@click.option('-e', '--team_id', help='Team ID')
+@click.option('-o', '--bot_id', help='Bot ID ')
 @click.option('-u', '--username', help='Username to Post as on Slack')
 @click.option('-c', '--channel', help='Channel to Post Message to on Slack')
 @click.option('-m', '--message', help='Message to Post')
 @click.option('-r', '--rot13', is_flag=True, help='Send message ROT13 Encoded')
 @click.option('-b', '--base64', is_flag=True, help='Send message Base64 Encoded')
-def post_message(token, username, channel, message, rot13, base64):
+def post_message(token, team_id, bot_id, username, channel, message, rot13, base64):
 
     cfg = ConfigObject()
 
@@ -78,11 +92,12 @@ def post_message(token, username, channel, message, rot13, base64):
         msg_text = message
 
     if os.path.exists(cfg.config_file):
-        msg = SlackSend(cfg.token, cfg.username, cfg.channel, msg_text)
+        msg = SlackSend(cfg.token, cfg.team_id, cfg.bot_id, cfg.username, cfg.channel, msg_text)
     else:
-        msg = SlackSend(token, username, channel, msg_text)
+        msg = SlackSend(token, team_id, bot_id, username, channel, msg_text)
 
     msg.send_message()
+    print('Message has been sent successfully!')
 
 
 if __name__ == '__main__':
